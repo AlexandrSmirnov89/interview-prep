@@ -1,0 +1,13 @@
+[project]
+name = "interview-prep"
+version = "0.1.0"
+dependencies = [
+    "ruff>=0.9.9",
+]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
