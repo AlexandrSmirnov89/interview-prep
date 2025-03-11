@@ -6,7 +6,6 @@ import asyncio
 from asyncio import Semaphore
 
 
-
 async def get_url_and_write(url: str, session: aiohttp.ClientSession, semaphore: Semaphore, file):
     async with semaphore:
         try:
