@@ -32,8 +32,8 @@ async def get_url_and_write(url: str, session: aiohttp.ClientSession, semaphore:
                     buffer = b''
                     async for chunk in response.content.iter_any():
                         buffer += chunk
-
-                    content = await session._loop.run_in_executor(pool, json.loads, buffer.decode())
+                    loop = asyncio.get_running_loop()
+                    content = await loop.run_in_executor(pool, json.loads, buffer.decode())
                     result = {'url': url, 'content': content}
                     await write_queue.put(result)
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
