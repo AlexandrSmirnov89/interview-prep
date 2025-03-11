@@ -2,6 +2,7 @@ import json
 import aiofiles
 import aiohttp
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 from asyncio import Semaphore, Queue
 
 
@@ -16,24 +17,25 @@ async def read_urls(file_urls: str, queue: Queue):
 async def write_results(file_path: str, queue: Queue):
     async with aiofiles.open(file_path, 'a') as file:
         while True:
-            item = await queue.get()
-            if item is None:
+            result = await queue.get()
+            if result is None:
                 break
 
-            url, content = item
-            result = {'url': url, 'content': json.loads(content.decode())}
             await file.write(json.dumps(result, ensure_ascii=False) + '\n')
             queue.task_done()
 
 async def get_url_and_write(url: str, session: aiohttp.ClientSession, semaphore: Semaphore, write_queue: Queue):
     async with semaphore:
         try:
-            async with session.get(url, timeout=10) as response:
+            async with session.get(url, timeout=10) as response, ProcessPoolExecutor() as pool:
                 if response.status == 200:
                     buffer = b''
                     async for chunk in response.content.iter_any():
                         buffer += chunk
-                    await write_queue.put((url, buffer))
+
+                    content = await session._loop.run_in_executor(pool, json.loads, buffer.decode())
+                    result = {'url': url, 'content': content}
+                    await write_queue.put(result)
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             print(f'Возникла ошибка при запросе {url}: {e}')
 
