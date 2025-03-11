@@ -16,9 +16,12 @@ async def read_urls(file_urls: str, queue: Queue):
 async def write_results(file_path: str, queue: Queue):
     async with aiofiles.open(file_path, 'a') as file:
         while True:
-            result = await queue.get()
-            if result is None:
+            item = await queue.get()
+            if item is None:
                 break
+
+            url, content = item
+            result = {'url': url, 'content': json.loads(content.decode())}
             await file.write(json.dumps(result, ensure_ascii=False) + '\n')
             queue.task_done()
 
@@ -30,8 +33,7 @@ async def get_url_and_write(url: str, session: aiohttp.ClientSession, semaphore:
                     buffer = b''
                     async for chunk in response.content.iter_any():
                         buffer += chunk
-                    result = {'url': url, 'content': json.loads(buffer.decode())}
-                    await write_queue.put(result)
+                    await write_queue.put((url, buffer))
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             print(f'Возникла ошибка при запросе {url}: {e}')
 
