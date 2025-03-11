@@ -1,0 +1,5 @@
+Function Name,Data Size,Execution Time (s)
+single_threaded,1000000,98.5080
+tread_pool,1000000,176.7875
+multiprocess_pool,1000000,17.0040
+multiprocess_queue,1000000,82.8356

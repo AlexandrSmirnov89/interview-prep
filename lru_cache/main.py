@@ -1,5 +1,5 @@
 import unittest.mock
-from functools import wraps
+from functools import wraps, lru_cache
 
 
 def _lru_cache_decorator(func, maxsize=None):
