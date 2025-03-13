@@ -9,7 +9,7 @@ from asyncio import Semaphore, Queue
 async def read_urls(file_urls: str, queue: Queue):
     async with aiofiles.open(file_urls, 'r') as file:
         async for line in file:
-            url = (await line).strip()
+            url = line.strip()
             if url:
                 await queue.put(url)
     await queue.put(None)
@@ -24,7 +24,7 @@ async def write_results(file_path: str, queue: Queue):
             await file.write(json.dumps(result, ensure_ascii=False) + '\n')
             queue.task_done()
 
-async def get_url_and_write(url: str, session: aiohttp.ClientSession, semaphore: Semaphore, write_queue: Queue):
+async def get_response_and_write(url: str, session: aiohttp.ClientSession, semaphore: Semaphore, write_queue: Queue):
     async with semaphore:
         try:
             async with session.get(url, timeout=10) as response, ProcessPoolExecutor() as pool:
@@ -44,7 +44,7 @@ async def process_urls(url_queue: Queue, session: aiohttp.ClientSession, semapho
         url = await url_queue.get()
         if url is None:
             break
-        await get_url_and_write(url, session, semaphore, write_queue)
+        await get_response_and_write(url, session, semaphore, write_queue)
 
 async def fetch_urls(file_urls, max_concurrent_requests = 5):
     semaphore: Semaphore = Semaphore(max_concurrent_requests)
@@ -65,3 +65,8 @@ async def fetch_urls(file_urls, max_concurrent_requests = 5):
 
         await write_queue.put(None)
         await writer_task
+
+
+import requests
+
+requests.get()

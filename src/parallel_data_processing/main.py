@@ -17,7 +17,6 @@ def measure_time(func):
         function_name = func.__name__
         size_list = args[0]
         with open('performance_results.csv', 'a', newline='') as csvfile:
-            columns = []
             writer = csv.writer(csvfile)
             writer.writerow([function_name, size_list, f"{execution_time:.4f}"])
         print(f"Функция {func.__name__} выполнилась за {execution_time:.4f} секунд")
