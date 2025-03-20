@@ -6,14 +6,14 @@ from concurrent.futures import ProcessPoolExecutor
 from asyncio import Semaphore, Queue
 
 
-async def read_urls(file_urls: str, queue: Queue):
+async def read_urls(file_urls: str, queue: Queue, num_worker: int):
     async with aiofiles.open(file_urls, 'r') as file:
         async for line in file:
             url = line.strip()
             if url:
                 await queue.put(url)
 
-    for _ in range(queue.maxsize):
+    for _ in range(num_worker):
         await queue.put(None)
 
 async def write_results(file_path: str, queue: Queue):
@@ -68,7 +68,7 @@ async def fetch_urls(file_urls, max_concurrent_requests = 5):
 
     async with aiohttp.ClientSession() as session, ProcessPoolExecutor() as pool:
 
-        reader_task = asyncio.create_task(read_urls(file_urls, url_queue))
+        reader_task = asyncio.create_task(read_urls(file_urls, url_queue, max_concurrent_requests))
         writer_task = asyncio.create_task(write_results('results.json', write_queue))
 
         download_tasks = []
